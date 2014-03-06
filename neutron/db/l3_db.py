@@ -608,6 +608,10 @@ class L3_NAT_db_mixin(l3.RouterPluginBase):
             msg = _("Network %s is not a valid external network") % f_net_id
             raise q_exc.BadRequest(resource='floatingip', msg=msg)
 
+        fixed_ips = attributes.ATTR_NOT_SPECIFIED
+        if fip['floating_ip_address']:
+            fixed_ips = [{'ip_address': fip['floating_ip_address']}]
+
         with context.session.begin(subtransactions=True):
             # This external port is never exposed to the tenant.
             # it is used purely for internal system and admin use when
@@ -617,7 +621,7 @@ class L3_NAT_db_mixin(l3.RouterPluginBase):
                 {'tenant_id': '',  # tenant intentionally not set
                  'network_id': f_net_id,
                  'mac_address': attributes.ATTR_NOT_SPECIFIED,
-                 'fixed_ips': attributes.ATTR_NOT_SPECIFIED,
+                 'fixed_ips': fixed_ips,
                  'admin_state_up': True,
                  'device_id': fip_id,
                  'device_owner': DEVICE_OWNER_FLOATINGIP,
