@@ -38,6 +38,10 @@ EXTENDED_ATTRIBUTES_2_0 = {
                  'validate':
                  {'type:dict_or_nodata':
                   {'network_id': {'type:uuid': None, 'required': True},
+                   'floating_ip_address': {
+                       'allow_post': True, 'allow_put': False,
+                       'validate': {'type:ip_address_or_none': None},
+                       'is_visible': True, 'default': None},
                    'enable_snat': {'type:boolean': None, 'required': False,
                                    'convert_to': attrs.convert_to_boolean}}
                   }}}}

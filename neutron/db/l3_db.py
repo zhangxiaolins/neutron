@@ -150,13 +150,17 @@ class L3_NAT_db_mixin(l3.RouterPluginBase):
             context, [router_db['id']])
         return self._make_router_dict(router_db)
 
-    def _create_router_gw_port(self, context, router, network_id):
+    def _create_router_gw_port(self, context, router, network_id,
+                               floating_ip_address=None):
+        # TODO(xiaolin): verifed if floating_ip_address is feasible and valid
+        fixed_ips = (attributes.ATTR_NOT_SPECIFIED if not floating_ip_address
+                     else [{'ip_address': floating_ip_address}])
         # Port has no 'tenant-id', as it is hidden from user
         gw_port = self._core_plugin.create_port(context.elevated(), {
             'port': {'tenant_id': '',  # intentionally not set
                      'network_id': network_id,
                      'mac_address': attributes.ATTR_NOT_SPECIFIED,
-                     'fixed_ips': attributes.ATTR_NOT_SPECIFIED,
+                     'fixed_ips': fixed_ips,
                      'device_id': router['id'],
                      'device_owner': DEVICE_OWNER_ROUTER_GW,
                      'admin_state_up': True,
@@ -212,7 +216,10 @@ class L3_NAT_db_mixin(l3.RouterPluginBase):
                 self._check_for_dup_router_subnet(context, router_id,
                                                   network_id, subnet['id'],
                                                   subnet['cidr'])
-            self._create_router_gw_port(context, router, network_id)
+            # NOTE(xiaolin): adds a preferred floating ip address for gw port
+            floating_ip_address = info['floating_ip_address'] if info else None
+            self._create_router_gw_port(context, router, network_id,
+                                        floating_ip_address)
 
     def delete_router(self, context, id):
         with context.session.begin(subtransactions=True):
